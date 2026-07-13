@@ -26,3 +26,11 @@ def bridge_url() -> str | None:
 def bridge_file() -> str | None:
     v = (os.environ.get(f"{_PREFIX}_BRIDGE_FILE") or "").strip()
     return v or None
+
+
+def spawn_allowlist() -> set[str] | None:
+    raw = (os.environ.get(f"{_PREFIX}_SPAWN_ALLOWLIST") or "").strip()
+    if not raw:
+        return None
+    values = {item.strip().lower() for item in raw.split(",") if item.strip()}
+    return values or None

@@ -8,7 +8,7 @@ from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from gazebo_mcp.config import bridge_file, bridge_url
+from gazebo_mcp.config import bridge_file, bridge_url, spawn_allowlist
 
 
 class LiveBackend:
@@ -96,6 +96,15 @@ class LiveBackend:
         return self._unsupported("snapshot")
 
     def spawn(self, name: str, model_type: str, x: float, y: float, z: float, yaw: float = 0.0) -> dict[str, Any]:
+        allowed = spawn_allowlist()
+        normalized = (model_type or "").strip().lower()
+        if allowed is not None and normalized not in allowed:
+            return {
+                "ok": False,
+                "mode": "live",
+                "error": f"model_type {model_type!r} is not allowed by GAZEBO_MCP_SPAWN_ALLOWLIST",
+                "allowed_model_types": sorted(allowed),
+            }
         return self._unsupported("spawn")
 
     def delete(self, name: str) -> dict[str, Any]:
