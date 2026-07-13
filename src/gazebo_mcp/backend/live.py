@@ -53,6 +53,9 @@ class LiveBackend:
     def list_models(self) -> list[dict[str, Any]]:
         return []
 
+    def snapshot(self) -> dict[str, Any]:
+        return self._unsupported("snapshot")
+
     def spawn(self, name: str, model_type: str, x: float, y: float, z: float, yaw: float = 0.0) -> dict[str, Any]:
         return self._unsupported("spawn")
 

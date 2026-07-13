@@ -94,6 +94,7 @@ def call_cmd(
         "gazebo_seed_demo": b.seed_demo,
         "gazebo_world_info": b.world_info,
         "gazebo_list_models": b.list_models,
+        "gazebo_snapshot": b.snapshot,
         "gazebo_spawn": lambda: b.spawn(
             str(kv.get("name", "obj")),
             str(kv.get("model_type", "box")),
