@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Any, Optional
 
 import typer
@@ -77,10 +78,15 @@ def tools_list() -> None:
 def call_cmd(
     tool: str = typer.Argument(..., help="Short name e.g. doctor or gazebo_doctor"),
     arg: Optional[list[str]] = typer.Argument(None, help="key=value pairs"),
+    json_file: Optional[Path] = typer.Option(
+        None,
+        "--json-file",
+        help="Read tool arguments from a JSON object file; key=value args override it.",
+    ),
 ) -> None:
     b = get_backend()
     name = tool if tool.startswith("gazebo_") else f"gazebo_{tool}"
-    kv: dict[str, Any] = {}
+    kv: dict[str, Any] = _load_json_args(json_file) if json_file else {}
     for a in arg or []:
         if "=" in a:
             k, v = a.split("=", 1)
@@ -119,6 +125,20 @@ def call_cmd(
     if name not in dispatch:
         raise typer.BadParameter(f"unknown tool {name}")
     rprint(dispatch[name]())
+
+
+def _load_json_args(path: Path) -> dict[str, Any]:
+    try:
+        raw = path.read_text(encoding="utf-8-sig")
+    except OSError as exc:
+        raise typer.BadParameter(f"could not read JSON file {path}: {exc}") from exc
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise typer.BadParameter(f"invalid JSON in {path}: {exc}") from exc
+    if not isinstance(data, dict):
+        raise typer.BadParameter(f"JSON file {path} must contain an object")
+    return data
 
 
 @app.command("serve")

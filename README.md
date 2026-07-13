@@ -100,6 +100,22 @@ Smoke it offline via the CLI:
 gazebo-mcp call snapshot
 ```
 
+One-shot calls can read tool arguments from a JSON object file:
+
+```json
+{
+  "name": "json_box",
+  "model_type": "box",
+  "x": 2,
+  "y": 3,
+  "z": 0.5
+}
+```
+
+```powershell
+gazebo-mcp call spawn --json-file args.json
+```
+
 ---
 
 ## Examples
