@@ -31,6 +31,7 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
 gazebo-mcp demo
+gazebo-mcp demo --profile fleet
 gazebo-mcp doctor
 pytest -q
 ```
@@ -109,6 +110,18 @@ pose. The metadata is returned by `gazebo_get_pose`, `gazebo_list_models`, and
 
 ```powershell
 gazebo-mcp call set_pose name=box_1 x=1 y=2 z=0.5 yaw=0.25 linear_x=0.2 angular_z=0.1
+```
+
+---
+
+## Demo profiles
+
+The default mock seed includes a ground plane, box, and sphere. The fleet
+profile seeds `ground_plane` plus `robot_0`, `robot_1`, and `robot_2` with
+distinct poses for multi-robot demos:
+
+```powershell
+gazebo-mcp demo --profile fleet
 ```
 
 ---

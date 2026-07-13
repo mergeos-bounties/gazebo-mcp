@@ -7,9 +7,24 @@ def test_seed_and_models():
     b = MockBackend()
     s = b.seed_demo()
     assert s["ok"] is True
+    assert s["profile"] == "default"
     models = b.list_models()
     assert any(m["name"] == "box_1" for m in models)
     assert b.doctor()["ok"] is True
+
+
+def test_fleet_seed_profile():
+    b = MockBackend()
+    s = b.seed_demo(profile="fleet")
+    assert s["ok"] is True
+    assert s["profile"] == "fleet"
+    models = b.list_models()
+    names = {m["name"] for m in models}
+    assert {"ground_plane", "robot_0", "robot_1", "robot_2"}.issubset(names)
+    poses = [next(m for m in models if m["name"] == f"robot_{i}")["pose"] for i in range(3)]
+    assert len({(p["x"], p["y"], p["yaw"]) for p in poses}) == 3
+    assert all(next(m for m in models if m["name"] == f"robot_{i}")["type"] == "robot" for i in range(3))
+    assert b.world_info()["world"] == "fleet_demo"
 
 
 def test_spawn_pose_step():

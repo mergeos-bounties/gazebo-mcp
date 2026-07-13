@@ -49,16 +49,20 @@ def doctor_cmd() -> None:
 
 
 @app.command("demo")
-def demo_cmd() -> None:
+def demo_cmd(
+    profile: str = typer.Option("default", "--profile", help="Mock seed profile: default or fleet."),
+) -> None:
     """Offline smoke: seed mock world, spawn, pose, step."""
     set_mode("mock")
     b = get_backend()
-    rprint(b.seed_demo())
+    rprint(b.seed_demo(profile=profile))
     rprint(b.doctor())
     rprint({"world": b.world_info()})
     rprint({"models": b.list_models()})
-    rprint({"spawn": b.spawn("cylinder_demo", "cylinder", 2.0, 1.0, 0.5)})
-    rprint({"pose": b.set_pose("box_1", 1.5, 0.0, 0.5, 0.2)})
+    if not any(m.get("name") == "cylinder_demo" for m in b.list_models()):
+        rprint({"spawn": b.spawn("cylinder_demo", "cylinder", 2.0, 1.0, 0.5)})
+    pose_target = "box_1" if any(m.get("name") == "box_1" for m in b.list_models()) else "robot_0"
+    rprint({"pose": b.set_pose(pose_target, 1.5, 0.0, 0.5, 0.2)})
     rprint({"pause": b.pause()})
     rprint({"step": b.step(10)})
     rprint({"unpause": b.unpause()})

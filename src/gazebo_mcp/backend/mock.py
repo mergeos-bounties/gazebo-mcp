@@ -12,18 +12,52 @@ class MockBackend:
     def __init__(self) -> None:
         self.seed_demo()
 
-    def seed_demo(self) -> dict[str, Any]:
-        self._world = "shapes_demo"
+    def seed_demo(self, profile: str = "default") -> dict[str, Any]:
+        profile = (profile or "default").strip().lower()
+        self._world = "fleet_demo" if profile == "fleet" else "shapes_demo"
         self._paused = False
         self._t0 = time.time()
         self._sim_time = 0.0
-        self._models: dict[str, dict[str, Any]] = {
+        self._models = self._seed_models(profile)
+        return {
+            "ok": True,
+            "profile": profile,
+            "world": self._world,
+            "models": list(self._models),
+        }
+
+    def _seed_models(self, profile: str) -> dict[str, dict[str, Any]]:
+        models: dict[str, dict[str, Any]] = {
             "ground_plane": {
                 "name": "ground_plane",
                 "type": "plane",
                 "pose": {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0},
                 "twist": self._twist(),
             },
+        }
+        if profile == "fleet":
+            models.update(
+                {
+                    "robot_0": {
+                        "name": "robot_0",
+                        "type": "robot",
+                        "pose": {"x": -1.0, "y": -1.0, "z": 0.1, "yaw": 0.0},
+                    },
+                    "robot_1": {
+                        "name": "robot_1",
+                        "type": "robot",
+                        "pose": {"x": 0.0, "y": 1.0, "z": 0.1, "yaw": 1.57},
+                    },
+                    "robot_2": {
+                        "name": "robot_2",
+                        "type": "robot",
+                        "pose": {"x": 1.0, "y": -1.0, "z": 0.1, "yaw": 3.14},
+                    },
+                }
+            )
+            return models
+        models.update(
+            {
             "box_1": {
                 "name": "box_1",
                 "type": "box",
@@ -36,8 +70,9 @@ class MockBackend:
                 "pose": {"x": -1.0, "y": 0.5, "z": 0.5, "yaw": 0.0},
                 "twist": self._twist(),
             },
-        }
-        return {"ok": True, "world": self._world, "models": list(self._models)}
+            }
+        )
+        return models
 
     def _twist(
         self,
