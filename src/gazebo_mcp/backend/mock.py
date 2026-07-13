@@ -63,6 +63,25 @@ class MockBackend:
     def list_models(self) -> list[dict[str, Any]]:
         return list(self._models.values())
 
+    def snapshot(self) -> dict[str, Any]:
+        """Full world snapshot: models, sim time, physics params."""
+        if not self._paused:
+            self._sim_time = time.time() - self._t0
+        return {
+            "ok": True,
+            "world": self._world,
+            "paused": self._paused,
+            "sim_time_sec": round(self._sim_time, 3),
+            "model_count": len(self._models),
+            "models": list(self._models.values()),
+            "physics": {
+                "engine": "ode-mock",
+                "max_step_size": 0.001,
+                "real_time_factor": 1.0,
+                "gravity": {"x": 0.0, "y": 0.0, "z": -9.8},
+            },
+        }
+
     def spawn(
         self,
         name: str,

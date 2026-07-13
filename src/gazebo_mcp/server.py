@@ -56,6 +56,12 @@ def gazebo_list_models() -> str:
     return _j(get_backend().list_models())
 
 
+@mcp.resource("gazebo://world")
+def world_snapshot() -> str:
+    """Snapshot of the current Gazebo world: models, poses, sim time, physics."""
+    return _j(get_backend().snapshot())
+
+
 @mcp.tool()
 def gazebo_spawn(
     name: str,

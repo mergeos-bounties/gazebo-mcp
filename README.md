@@ -64,6 +64,44 @@ gazebo-mcp serve
 
 ---
 
+## Resources
+
+| Resource URI | Purpose |
+| --- | --- |
+| `gazebo://world` | JSON snapshot of the current world: models + poses, sim time, paused state, physics params |
+
+The `gazebo://world` resource returns the live mock world state (or the live-bridge
+state in `live` mode). Example payload:
+
+```json
+{
+  "ok": true,
+  "world": "shapes_demo",
+  "paused": false,
+  "sim_time_sec": 1.234,
+  "model_count": 3,
+  "models": [
+    {"name": "ground_plane", "type": "plane", "pose": {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0}},
+    {"name": "box_1", "type": "box", "pose": {"x": 1.0, "y": 0.0, "z": 0.5, "yaw": 0.0}},
+    {"name": "sphere_1", "type": "sphere", "pose": {"x": -1.0, "y": 0.5, "z": 0.5, "yaw": 0.0}}
+  ],
+  "physics": {
+    "engine": "ode-mock",
+    "max_step_size": 0.001,
+    "real_time_factor": 1.0,
+    "gravity": {"x": 0.0, "y": 0.0, "z": -9.8}
+  }
+}
+```
+
+Smoke it offline via the CLI:
+
+```powershell
+gazebo-mcp call snapshot
+```
+
+---
+
 ## Examples
 
 - [examples/cursor_mcp.json](examples/cursor_mcp.json)
