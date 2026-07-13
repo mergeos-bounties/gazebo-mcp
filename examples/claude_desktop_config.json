@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "gazebo-mcp": {
+      "command": "gazebo-mcp",
+      "args": [
+        "serve"
+      ],
+      "env": {
+        "GAZEBO_MCP_MODE": "mock"
+      }
+    }
+  }
+}

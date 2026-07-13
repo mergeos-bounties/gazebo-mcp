@@ -1,0 +1,118 @@
+"""Offline Gazebo-style world mock."""
+
+from __future__ import annotations
+
+import time
+from typing import Any
+
+
+class MockBackend:
+    name = "mock"
+
+    def __init__(self) -> None:
+        self.seed_demo()
+
+    def seed_demo(self) -> dict[str, Any]:
+        self._world = "shapes_demo"
+        self._paused = False
+        self._t0 = time.time()
+        self._sim_time = 0.0
+        self._models: dict[str, dict[str, Any]] = {
+            "ground_plane": {
+                "name": "ground_plane",
+                "type": "plane",
+                "pose": {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0},
+            },
+            "box_1": {
+                "name": "box_1",
+                "type": "box",
+                "pose": {"x": 1.0, "y": 0.0, "z": 0.5, "yaw": 0.0},
+            },
+            "sphere_1": {
+                "name": "sphere_1",
+                "type": "sphere",
+                "pose": {"x": -1.0, "y": 0.5, "z": 0.5, "yaw": 0.0},
+            },
+        }
+        return {"ok": True, "world": self._world, "models": list(self._models)}
+
+    def doctor(self) -> dict[str, Any]:
+        return {
+            "ok": True,
+            "connected": True,
+            "mode": "mock",
+            "gazebo_required": False,
+            "message": "Mock Gazebo world active — no Gazebo install needed",
+            "world": self._world,
+            "model_count": len(self._models),
+            "paused": self._paused,
+            "sim_time_sec": round(self._sim_time, 3),
+        }
+
+    def world_info(self) -> dict[str, Any]:
+        if not self._paused:
+            self._sim_time = time.time() - self._t0
+        return {
+            "world": self._world,
+            "paused": self._paused,
+            "sim_time_sec": round(self._sim_time, 3),
+            "model_count": len(self._models),
+            "physics": "ode-mock",
+        }
+
+    def list_models(self) -> list[dict[str, Any]]:
+        return list(self._models.values())
+
+    def spawn(
+        self,
+        name: str,
+        model_type: str,
+        x: float,
+        y: float,
+        z: float,
+        yaw: float = 0.0,
+    ) -> dict[str, Any]:
+        if name in self._models:
+            return {"ok": False, "error": f"model {name} already exists"}
+        self._models[name] = {
+            "name": name,
+            "type": model_type or "box",
+            "pose": {"x": float(x), "y": float(y), "z": float(z), "yaw": float(yaw)},
+        }
+        return {"ok": True, "model": self._models[name]}
+
+    def delete(self, name: str) -> dict[str, Any]:
+        if name not in self._models:
+            return {"ok": False, "error": f"unknown model {name}"}
+        if name == "ground_plane":
+            return {"ok": False, "error": "cannot delete ground_plane"}
+        del self._models[name]
+        return {"ok": True, "deleted": name}
+
+    def get_pose(self, name: str) -> dict[str, Any]:
+        m = self._models.get(name)
+        if not m:
+            return {"ok": False, "error": f"unknown model {name}"}
+        return {"ok": True, "name": name, "pose": m["pose"]}
+
+    def set_pose(self, name: str, x: float, y: float, z: float, yaw: float = 0.0) -> dict[str, Any]:
+        m = self._models.get(name)
+        if not m:
+            return {"ok": False, "error": f"unknown model {name}"}
+        m["pose"] = {"x": float(x), "y": float(y), "z": float(z), "yaw": float(yaw)}
+        return {"ok": True, "name": name, "pose": m["pose"]}
+
+    def pause(self) -> dict[str, Any]:
+        self._paused = True
+        return {"ok": True, "paused": True, "sim_time_sec": round(self._sim_time, 3)}
+
+    def unpause(self) -> dict[str, Any]:
+        self._paused = False
+        self._t0 = time.time() - self._sim_time
+        return {"ok": True, "paused": False}
+
+    def step(self, steps: int = 1) -> dict[str, Any]:
+        n = max(1, int(steps))
+        self._sim_time += 0.001 * n
+        self._paused = True
+        return {"ok": True, "steps": n, "sim_time_sec": round(self._sim_time, 3), "paused": True}
