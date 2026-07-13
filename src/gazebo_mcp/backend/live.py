@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from gazebo_mcp.config import bridge_file, bridge_url
@@ -13,22 +14,54 @@ from gazebo_mcp.config import bridge_file, bridge_url
 class LiveBackend:
     name = "live"
 
+    def _get_json(self, endpoint: str) -> dict[str, Any]:
+        url = bridge_url()
+        if not url:
+            return {
+                "ok": False,
+                "connected": False,
+                "mode": "live",
+                "message": "Set GAZEBO_MCP_BRIDGE_URL for live HTTP bridge mode",
+            }
+        try:
+            target = url.rstrip("/") + endpoint
+            with urlopen(Request(target, method="GET"), timeout=2) as resp:
+                raw = resp.read().decode("utf-8", errors="replace")
+        except (HTTPError, URLError, TimeoutError, OSError) as exc:
+            return {"ok": False, "connected": False, "mode": "live", "error": str(exc)}
+
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            return {
+                "ok": False,
+                "connected": False,
+                "mode": "live",
+                "error": f"bridge returned invalid JSON from {endpoint}: {exc}",
+            }
+        if not isinstance(data, dict):
+            return {
+                "ok": False,
+                "connected": False,
+                "mode": "live",
+                "error": f"bridge returned non-object JSON from {endpoint}",
+            }
+        return data
+
     def doctor(self) -> dict[str, Any]:
         url = bridge_url()
         path = bridge_file()
         if url:
-            try:
-                with urlopen(Request(url.rstrip("/") + "/health", method="GET"), timeout=2) as resp:
-                    body = resp.read().decode("utf-8", errors="replace")
-                return {
-                    "ok": True,
-                    "connected": True,
-                    "mode": "live",
-                    "bridge": "http",
-                    "health": body[:500],
-                }
-            except (URLError, TimeoutError, OSError) as exc:
-                return {"ok": False, "connected": False, "mode": "live", "error": str(exc)}
+            data = self._get_json("/health")
+            if not data.get("ok", True):
+                return data
+            return {
+                "ok": True,
+                "connected": True,
+                "mode": "live",
+                "bridge": "http",
+                "health": data,
+            }
         if path and Path(path).is_file():
             return {"ok": True, "connected": True, "mode": "live", "bridge": "file", "path": path}
         return {
@@ -48,6 +81,12 @@ class LiveBackend:
         return {"ok": False, "error": f"live {op} not wired — configure bridge endpoints"}
 
     def world_info(self) -> dict[str, Any]:
+        url = bridge_url()
+        if url:
+            data = self._get_json("/world_info")
+            if not data.get("ok", True):
+                return data
+            return {"ok": True, **data}
         return self._unsupported("world_info")
 
     def list_models(self) -> list[dict[str, Any]]:

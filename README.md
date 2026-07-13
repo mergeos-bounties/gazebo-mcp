@@ -107,6 +107,7 @@ gazebo-mcp call snapshot
 - [examples/cursor_mcp.json](examples/cursor_mcp.json)
 - [examples/claude_desktop_config.json](examples/claude_desktop_config.json)
 - [docs/HOST_SETUP.md](docs/HOST_SETUP.md) for Cursor, Claude Desktop, and Grok setup
+- [docs/LIVE_BRIDGE.md](docs/LIVE_BRIDGE.md) for the live bridge health/world_info contract
 
 ---
 
