@@ -88,9 +88,31 @@ def gazebo_get_pose(name: str) -> str:
 
 
 @mcp.tool()
-def gazebo_set_pose(name: str, x: float, y: float, z: float, yaw: float = 0.0) -> str:
-    """Set model pose."""
-    return _j(get_backend().set_pose(name, x, y, z, yaw))
+def gazebo_set_pose(
+    name: str,
+    x: float,
+    y: float,
+    z: float,
+    yaw: float = 0.0,
+    linear_x: float = 0.0,
+    linear_y: float = 0.0,
+    linear_z: float = 0.0,
+    angular_x: float = 0.0,
+    angular_y: float = 0.0,
+    angular_z: float = 0.0,
+) -> str:
+    """Set model pose and optional linear/angular velocity metadata."""
+    return _j(
+        get_backend().set_pose(
+            name,
+            x,
+            y,
+            z,
+            yaw,
+            {"x": linear_x, "y": linear_y, "z": linear_z},
+            {"x": angular_x, "y": angular_y, "z": angular_z},
+        )
+    )
 
 
 @mcp.tool()

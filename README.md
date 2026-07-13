@@ -64,6 +64,18 @@ gazebo-mcp serve
 
 ---
 
+## Velocity metadata
+
+Mock pose updates can store linear and angular velocity metadata alongside the
+pose. The metadata is returned by `gazebo_get_pose`, `gazebo_list_models`, and
+`gazebo://world` snapshots:
+
+```powershell
+gazebo-mcp call set_pose name=box_1 x=1 y=2 z=0.5 yaw=0.25 linear_x=0.2 angular_z=0.1
+```
+
+---
+
 ## Resources
 
 | Resource URI | Purpose |

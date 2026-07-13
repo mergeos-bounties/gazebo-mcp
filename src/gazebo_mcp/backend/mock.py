@@ -22,19 +22,42 @@ class MockBackend:
                 "name": "ground_plane",
                 "type": "plane",
                 "pose": {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0},
+                "twist": self._twist(),
             },
             "box_1": {
                 "name": "box_1",
                 "type": "box",
                 "pose": {"x": 1.0, "y": 0.0, "z": 0.5, "yaw": 0.0},
+                "twist": self._twist(),
             },
             "sphere_1": {
                 "name": "sphere_1",
                 "type": "sphere",
                 "pose": {"x": -1.0, "y": 0.5, "z": 0.5, "yaw": 0.0},
+                "twist": self._twist(),
             },
         }
         return {"ok": True, "world": self._world, "models": list(self._models)}
+
+    def _twist(
+        self,
+        linear_velocity: dict[str, Any] | None = None,
+        angular_velocity: dict[str, Any] | None = None,
+    ) -> dict[str, dict[str, float]]:
+        linear_velocity = linear_velocity or {}
+        angular_velocity = angular_velocity or {}
+        return {
+            "linear": {
+                "x": float(linear_velocity.get("x", 0.0)),
+                "y": float(linear_velocity.get("y", 0.0)),
+                "z": float(linear_velocity.get("z", 0.0)),
+            },
+            "angular": {
+                "x": float(angular_velocity.get("x", 0.0)),
+                "y": float(angular_velocity.get("y", 0.0)),
+                "z": float(angular_velocity.get("z", 0.0)),
+            },
+        }
 
     def doctor(self) -> dict[str, Any]:
         return {
@@ -97,6 +120,7 @@ class MockBackend:
             "name": name,
             "type": model_type or "box",
             "pose": {"x": float(x), "y": float(y), "z": float(z), "yaw": float(yaw)},
+            "twist": self._twist(),
         }
         return {"ok": True, "model": self._models[name]}
 
@@ -112,14 +136,24 @@ class MockBackend:
         m = self._models.get(name)
         if not m:
             return {"ok": False, "error": f"unknown model {name}"}
-        return {"ok": True, "name": name, "pose": m["pose"]}
+        return {"ok": True, "name": name, "pose": m["pose"], "twist": m.get("twist", self._twist())}
 
-    def set_pose(self, name: str, x: float, y: float, z: float, yaw: float = 0.0) -> dict[str, Any]:
+    def set_pose(
+        self,
+        name: str,
+        x: float,
+        y: float,
+        z: float,
+        yaw: float = 0.0,
+        linear_velocity: dict[str, Any] | None = None,
+        angular_velocity: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         m = self._models.get(name)
         if not m:
             return {"ok": False, "error": f"unknown model {name}"}
         m["pose"] = {"x": float(x), "y": float(y), "z": float(z), "yaw": float(yaw)}
-        return {"ok": True, "name": name, "pose": m["pose"]}
+        m["twist"] = self._twist(linear_velocity, angular_velocity)
+        return {"ok": True, "name": name, "pose": m["pose"], "twist": m["twist"]}
 
     def pause(self) -> dict[str, Any]:
         self._paused = True
