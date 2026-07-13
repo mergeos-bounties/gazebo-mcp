@@ -41,6 +41,37 @@ gazebo-mcp serve
 
 ---
 
+## Docker mock image
+
+Build a slim container that runs the MCP server in offline mock mode:
+
+```powershell
+docker build -t gazebo-mcp:mock .
+```
+
+Run the server over stdio:
+
+```powershell
+docker run --rm -i -e GAZEBO_MCP_MODE=mock gazebo-mcp:mock
+```
+
+Use Docker Compose for host integrations that expect a long-running stdio process:
+
+```powershell
+docker compose up --build gazebo-mcp
+```
+
+Offline smoke check without privileged host Gazebo:
+
+```powershell
+docker run --rm -e GAZEBO_MCP_MODE=mock gazebo-mcp:mock gazebo-mcp demo
+```
+
+The image installs only the Python package and its dependencies. It does not
+install Gazebo, mount host devices, or require privileged container settings.
+
+---
+
 ## Modes
 
 | Mode | Env | Behavior |

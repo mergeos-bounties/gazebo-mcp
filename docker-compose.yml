@@ -1,0 +1,10 @@
+services:
+  gazebo-mcp:
+    build:
+      context: .
+    image: gazebo-mcp:mock
+    environment:
+      GAZEBO_MCP_MODE: mock
+    command: ["gazebo-mcp", "serve"]
+    stdin_open: true
+    tty: true
