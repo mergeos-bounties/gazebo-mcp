@@ -117,6 +117,8 @@ def call_cmd(
             float(kv.get("y", 0)),
             float(kv.get("z", 0.5)),
             float(kv.get("yaw", 0)),
+            _vec(kv, "linear"),
+            _vec(kv, "angular"),
         ),
         "gazebo_pause": b.pause,
         "gazebo_unpause": b.unpause,
@@ -139,6 +141,21 @@ def _load_json_args(path: Path) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise typer.BadParameter(f"JSON file {path} must contain an object")
     return data
+
+
+def _vec(kv: dict[str, Any], prefix: str) -> dict[str, float]:
+    nested = kv.get(f"{prefix}_velocity")
+    if isinstance(nested, dict):
+        return {
+            "x": float(nested.get("x", 0.0)),
+            "y": float(nested.get("y", 0.0)),
+            "z": float(nested.get("z", 0.0)),
+        }
+    return {
+        "x": float(kv.get(f"{prefix}_x", 0.0)),
+        "y": float(kv.get(f"{prefix}_y", 0.0)),
+        "z": float(kv.get(f"{prefix}_z", 0.0)),
+    }
 
 
 @app.command("serve")

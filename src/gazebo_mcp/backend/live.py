@@ -113,7 +113,16 @@ class LiveBackend:
     def get_pose(self, name: str) -> dict[str, Any]:
         return self._unsupported("get_pose")
 
-    def set_pose(self, name: str, x: float, y: float, z: float, yaw: float = 0.0) -> dict[str, Any]:
+    def set_pose(
+        self,
+        name: str,
+        x: float,
+        y: float,
+        z: float,
+        yaw: float = 0.0,
+        linear_velocity: dict[str, Any] | None = None,
+        angular_velocity: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         return self._unsupported("set_pose")
 
     def pause(self) -> dict[str, Any]:
