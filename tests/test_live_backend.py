@@ -6,6 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
 from gazebo_mcp.backend.live import LiveBackend
+from gazebo_mcp.backend.mock import MockBackend
 
 
 class BridgeHandler(BaseHTTPRequestHandler):
@@ -90,3 +91,33 @@ def test_live_world_info_fails_closed_when_bridge_down(monkeypatch):
     assert result["connected"] is False
     assert result["mode"] == "live"
     assert "error" in result
+
+
+def test_live_spawn_denies_disallowed_model_type(monkeypatch):
+    monkeypatch.setenv("GAZEBO_MCP_SPAWN_ALLOWLIST", "box,sphere,cylinder")
+
+    result = LiveBackend().spawn("robot_1", "robot", 0.0, 0.0, 0.1)
+
+    assert result["ok"] is False
+    assert result["mode"] == "live"
+    assert "not allowed" in result["error"]
+    assert result["allowed_model_types"] == ["box", "cylinder", "sphere"]
+
+
+def test_live_spawn_allowed_type_continues_to_live_bridge_check(monkeypatch):
+    monkeypatch.setenv("GAZEBO_MCP_SPAWN_ALLOWLIST", "box,sphere,cylinder")
+
+    result = LiveBackend().spawn("box_2", "box", 0.0, 0.0, 0.5)
+
+    assert result["ok"] is False
+    assert result["mode"] == "live"
+    assert "Set GAZEBO_MCP_BRIDGE_URL" in result["message"]
+
+
+def test_mock_spawn_unaffected_by_live_allowlist(monkeypatch):
+    monkeypatch.setenv("GAZEBO_MCP_SPAWN_ALLOWLIST", "box")
+
+    result = MockBackend().spawn("robot_1", "robot", 0.0, 0.0, 0.1)
+
+    assert result["ok"] is True
+    assert result["model"]["type"] == "robot"

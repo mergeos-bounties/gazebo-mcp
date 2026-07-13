@@ -48,6 +48,12 @@ gazebo-mcp serve
 | **mock** (default) | `GAZEBO_MCP_MODE=mock` | In-memory world graph |
 | **live** | `GAZEBO_MCP_MODE=live` + bridge URL/file | Forwards to local Gazebo bridge |
 
+Live mode can restrict spawn model types before reaching the bridge:
+
+```powershell
+$env:GAZEBO_MCP_SPAWN_ALLOWLIST = "box,sphere,cylinder"
+```
+
 ---
 
 ## Tools
