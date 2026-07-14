@@ -1,0 +1,20 @@
+{
+  "name": "gazebo-mcp",
+  "version": "0.1.0",
+  "description": "Gazebo / gz-sim worlds, models, poses (mock + live bridge). One-command install from GitHub for Grok + MCP hosts.",
+  "author": {
+    "name": "MergeOS / ThanhTrucSolutions",
+    "url": "https://github.com/mergeos-bounties"
+  },
+  "homepage": "https://github.com/mergeos-bounties/gazebo-mcp",
+  "repository": "https://github.com/mergeos-bounties/gazebo-mcp",
+  "license": "MIT",
+  "keywords": [
+    "gazebo",
+    "gz-sim",
+    "ros",
+    "mcp",
+    "simulation",
+    "mergeos"
+  ]
+}

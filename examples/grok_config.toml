@@ -1,0 +1,8 @@
+# Paste into ~/.grok/config.toml or project .grok/config.toml
+# Requires: pip install "git+https://github.com/mergeos-bounties/gazebo-mcp.git"
+
+[mcp_servers.gazebo_mcp]
+command = "gazebo-mcp"
+args = ["serve"]
+env = { GAZEBO_MCP_MODE = "mock" }
+enabled = true
