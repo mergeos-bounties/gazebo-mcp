@@ -45,7 +45,34 @@ def doctor_cmd() -> None:
     info = b.doctor()
     info["gazebo_mcp_version"] = __version__
     info["mode"] = get_mode()
+    info["tool_count"] = _count_tools()
     rprint(info)
+
+
+def _count_tools() -> int:
+    try:
+        from gazebo_mcp.server import mcp
+        tools = getattr(mcp, "_tool_manager", None)
+        if tools:
+            return len(getattr(tools, "_tools", {}) or {})
+    except Exception:
+        pass
+    return 0
+
+
+@app.command("quickstart")
+def quickstart_cmd() -> None:
+    """Print mock vs live quickstart guide."""
+    console.print("[bold]gazebo-mcp Quickstart[/bold]\n")
+    console.print("[cyan]Mock mode (offline, no Gazebo needed):[/cyan]")
+    console.print("  gazebo-mcp demo")
+    console.print("  gazebo-mcp doctor\n")
+    console.print("[cyan]Live mode (requires Gazebo + gz-transport):[/cyan]")
+    console.print("  export GAZEBO_MCP_MODE=live")
+    console.print("  gazebo-mcp doctor")
+    console.print("  gazebo-mcp demo --profile fleet\n")
+    console.print("[dim]Mock mode supports world_list, model_spawn, pose_get/set, step_simulation[/dim]")
+    console.print("[dim]Live mode bridges gz-transport for real simulation control[/dim]")
 
 
 @app.command("demo")
