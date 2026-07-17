@@ -8,6 +8,7 @@ runner = CliRunner()
 def test_demo_exits_zero():
     result = runner.invoke(app, ["demo"])
     assert result.exit_code == 0
+    assert "fleet_demo" in result.stdout
     assert "demo complete" in result.stdout
 
 

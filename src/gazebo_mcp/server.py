@@ -51,6 +51,12 @@ def gazebo_world_info() -> str:
 
 
 @mcp.tool()
+def gazebo_world_list() -> str:
+    """List available worlds and identify the active world."""
+    return _j(get_backend().list_worlds())
+
+
+@mcp.tool()
 def gazebo_list_models() -> str:
     """List models in the current world."""
     return _j(get_backend().list_models())

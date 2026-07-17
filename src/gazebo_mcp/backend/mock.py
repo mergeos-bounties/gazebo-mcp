@@ -118,6 +118,29 @@ class MockBackend:
             "physics": "ode-mock",
         }
 
+    def list_worlds(self) -> dict[str, Any]:
+        """List deterministic offline world fixtures and mark the active world."""
+        worlds = [
+            {
+                "name": "shapes_demo",
+                "profile": "default",
+                "model_count": 3,
+                "active": self._world == "shapes_demo",
+            },
+            {
+                "name": "fleet_demo",
+                "profile": "fleet",
+                "model_count": 4,
+                "active": self._world == "fleet_demo",
+            },
+        ]
+        return {
+            "ok": True,
+            "mode": "mock",
+            "current_world": self._world,
+            "worlds": worlds,
+        }
+
     def list_models(self) -> list[dict[str, Any]]:
         return list(self._models.values())
 
