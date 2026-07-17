@@ -89,6 +89,22 @@ class LiveBackend:
             return {"ok": True, **data}
         return self._unsupported("world_info")
 
+    def list_worlds(self) -> dict[str, Any]:
+        url = bridge_url()
+        if not url:
+            return self._unsupported("world_list")
+        data = self._get_json("/worlds")
+        if not data.get("ok", True):
+            return data
+        if not isinstance(data.get("worlds"), list):
+            return {
+                "ok": False,
+                "connected": False,
+                "mode": "live",
+                "error": "bridge returned invalid worlds payload",
+            }
+        return {"ok": True, "mode": "live", **data}
+
     def list_models(self) -> list[dict[str, Any]]:
         return []
 

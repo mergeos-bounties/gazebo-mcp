@@ -13,6 +13,24 @@ def test_seed_and_models():
     assert b.doctor()["ok"] is True
 
 
+def test_world_list_marks_active_fixture():
+    b = MockBackend()
+    worlds = b.list_worlds()
+
+    assert worlds["ok"] is True
+    assert worlds["current_world"] == "shapes_demo"
+    assert {world["name"] for world in worlds["worlds"]} == {
+        "shapes_demo",
+        "fleet_demo",
+    }
+    assert next(world for world in worlds["worlds"] if world["active"])["name"] == "shapes_demo"
+
+    b.seed_demo(profile="fleet")
+    fleet = b.list_worlds()
+    assert fleet["current_world"] == "fleet_demo"
+    assert next(world for world in fleet["worlds"] if world["active"])["profile"] == "fleet"
+
+
 def test_fleet_seed_profile():
     b = MockBackend()
     s = b.seed_demo(profile="fleet")

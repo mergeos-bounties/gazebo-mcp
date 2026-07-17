@@ -174,6 +174,7 @@ $env:GAZEBO_MCP_SPAWN_ALLOWLIST = "box,sphere,cylinder"
 | `gazebo_doctor` | Connectivity / sim health |
 | `gazebo_seed_demo` | Reset mock shapes world |
 | `gazebo_world_info` | World name, paused, sim time |
+| `gazebo_world_list` | Available mock/live worlds and active world |
 | `gazebo_list_models` | Models in the world |
 | `gazebo_spawn` / `gazebo_delete` | Model lifecycle |
 | `gazebo_set_pose` / `gazebo_get_pose` | Pose control |

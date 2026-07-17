@@ -23,6 +23,7 @@ TOOL_NAMES = [
     "gazebo_doctor",
     "gazebo_seed_demo",
     "gazebo_world_info",
+    "gazebo_world_list",
     "gazebo_list_models",
     "gazebo_spawn",
     "gazebo_delete",
@@ -85,6 +86,7 @@ def demo_cmd(
     rprint(b.seed_demo(profile=profile))
     rprint(b.doctor())
     rprint({"world": b.world_info()})
+    rprint({"worlds": b.list_worlds()})
     rprint({"models": b.list_models()})
     if not any(m.get("name") == "cylinder_demo" for m in b.list_models()):
         rprint({"spawn": b.spawn("cylinder_demo", "cylinder", 2.0, 1.0, 0.5)})
@@ -130,6 +132,7 @@ def call_cmd(
         "gazebo_doctor": b.doctor,
         "gazebo_seed_demo": b.seed_demo,
         "gazebo_world_info": b.world_info,
+        "gazebo_world_list": b.list_worlds,
         "gazebo_list_models": b.list_models,
         "gazebo_snapshot": b.snapshot,
         "gazebo_spawn": lambda: b.spawn(
