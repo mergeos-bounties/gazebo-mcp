@@ -139,5 +139,17 @@ def gazebo_step(steps: int = 1) -> str:
     return _j(get_backend().step(steps))
 
 
+
+@mcp.tool()
+def gazebo_sensor_snapshot(sensor_type: str = "lidar", count: int = 1) -> str:
+    """Take a sensor snapshot (lidar/camera/depth/thermal) for agent workflows.
+    
+    Returns synthetic sensor frames with full schema documentation.
+    Supports: lidar (360-range scan), camera (RGB image info), 
+    depth (range image info), thermal (temperature map info).
+    """
+    return _j(get_backend().sensor_snapshot(sensor_type, count))
+
+
 def run_stdio() -> None:
     mcp.run(transport="stdio")

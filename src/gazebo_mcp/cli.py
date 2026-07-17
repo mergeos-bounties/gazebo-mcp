@@ -32,6 +32,7 @@ TOOL_NAMES = [
     "gazebo_pause",
     "gazebo_unpause",
     "gazebo_step",
+    "gazebo_sensor_snapshot",
 ]
 
 
@@ -157,6 +158,10 @@ def call_cmd(
         "gazebo_pause": b.pause,
         "gazebo_unpause": b.unpause,
         "gazebo_step": lambda: b.step(int(kv.get("steps", 1))),
+        "gazebo_sensor_snapshot": lambda: b.sensor_snapshot(
+            str(kv.get("sensor_type", "lidar")),
+            int(kv.get("count", 1)),
+        ),
     }
     if name not in dispatch:
         raise typer.BadParameter(f"unknown tool {name}")
