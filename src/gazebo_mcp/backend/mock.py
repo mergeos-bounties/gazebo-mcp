@@ -263,3 +263,77 @@ class MockBackend:
         self._sim_time += 0.001 * n
         self._paused = True
         return {"ok": True, "steps": n, "sim_time_sec": round(self._sim_time, 3), "paused": True}
+    def sensor_snapshot(self, sensor_type: str = "lidar", name: str | None = None) -> dict[str, Any]:
+        """Return synthetic sensor frame data for agent workflows.
+
+        Args:
+            sensor_type: Type of sensor ("lidar", "camera", "depth", "imu").
+            name: Optional model name to attach sensor data to.
+
+        Returns:
+            Dict with synthetic sensor frame data depending on sensor type.
+        """
+        sensor_type = (sensor_type or "lidar").strip().lower()
+        valid_types = {"lidar", "camera", "depth", "imu"}
+        if sensor_type not in valid_types:
+            return {"ok": False, "error": f"unsupported sensor_type '{sensor_type}'. Valid: {sorted(valid_types)}"}
+
+        if name is not None and name not in self._models:
+            return {"ok": False, "error": f"unknown model {name}"}
+
+        pose = self._models.get(name, {}).get("pose", {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0}) if name else {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0}
+
+        result: dict[str, Any] = {
+            "ok": True,
+            "mode": "mock",
+            "sensor_type": sensor_type,
+            "world": self._world,
+            "sim_time_sec": round(self._sim_time, 3),
+            "pose": pose,
+        }
+
+        if name:
+            result["model"] = name
+
+        if sensor_type == "lidar":
+            result["data"] = {
+                "num_points": 360,
+                "range_min": 0.1,
+                "range_max": 30.0,
+                "angle_min_rad": -3.14159,
+                "angle_max_rad": 3.14159,
+                "points": [
+                    {"angle_deg": i, "distance_m": round(5.0 + 3.0 * (i % 7) / 7.0, 3), "intensity": round(0.5 + 0.5 * (i % 3) / 3.0, 3)}
+                    for i in range(0, 360, 10)
+                ],
+            }
+        elif sensor_type == "camera":
+            result["data"] = {
+                "width": 640,
+                "height": 480,
+                "fov_deg": 90.0,
+                "format": "RGB8",
+                "frame_id": f"camera_frame_{int(self._sim_time * 30)}",
+                "timestamp_sec": round(self._sim_time, 3),
+            }
+        elif sensor_type == "depth":
+            result["data"] = {
+                "width": 320,
+                "height": 240,
+                "fov_deg": 87.0,
+                "format": "F32",
+                "range_min": 0.2,
+                "range_max": 10.0,
+                "frame_id": f"depth_frame_{int(self._sim_time * 30)}",
+                "timestamp_sec": round(self._sim_time, 3),
+            }
+        elif sensor_type == "imu":
+            result["data"] = {
+                "orientation": {"w": 1.0, "x": 0.0, "y": 0.0, "z": 0.0},
+                "angular_velocity": {"x": 0.0, "y": 0.0, "z": 0.0},
+                "linear_acceleration": {"x": 0.0, "y": 0.0, "z": -9.8},
+                "frame_id": f"imu_frame_{int(self._sim_time * 30)}",
+                "timestamp_sec": round(self._sim_time, 3),
+            }
+
+        return result

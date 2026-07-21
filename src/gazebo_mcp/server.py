@@ -150,5 +150,14 @@ def gazebo_step(steps: int = 1) -> str:
     return _j(get_backend().step(steps))
 
 
+@mcp.tool()
+def gazebo_sensor_snapshot(
+    sensor_type: str = "lidar",
+    name: str | None = None,
+) -> str:
+    """Return synthetic sensor frame data (lidar, camera, depth, imu)."""
+    return _j(get_backend().sensor_snapshot(sensor_type, name))
+
+
 def run_stdio() -> None:
     mcp.run(transport="stdio")
