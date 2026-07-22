@@ -139,5 +139,31 @@ def gazebo_step(steps: int = 1) -> str:
     return _j(get_backend().step(steps))
 
 
+# ── sensor tools ──────────────────────────────────────────────────
+
+
+@mcp.tool()
+def gazebo_list_sensors() -> str:
+    """List all sensors in the current world."""
+    return _j(get_backend().list_sensors())
+
+
+@mcp.tool()
+def gazebo_sensor_snapshot(
+    sensor_name: str,
+    resolution: str | None = None,
+) -> str:
+    """Capture a synthetic sensor frame (camera, lidar, imu, depth_camera)."""
+    return _j(get_backend().sensor_snapshot(sensor_name, resolution))
+
+
+@mcp.tool()
+def gazebo_sensor_snapshot_all(
+    sensor_types: str | None = None,
+) -> str:
+    """Capture frames for all sensors, optionally filtered by type."""
+    return _j(get_backend().sensor_snapshot_all(sensor_types))
+
+
 def run_stdio() -> None:
     mcp.run(transport="stdio")

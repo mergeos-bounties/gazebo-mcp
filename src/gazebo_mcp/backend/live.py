@@ -149,3 +149,48 @@ class LiveBackend:
 
     def step(self, steps: int = 1) -> dict[str, Any]:
         return self._unsupported("step")
+
+    # ── sensor stubs ─────────────────────────────────────────────────
+
+    def list_sensors(self) -> dict[str, Any]:
+        """Return sensors from live bridge or stub."""
+        url = bridge_url()
+        if url:
+            data = self._get_json("/sensors")
+            if data.get("ok"):
+                return {"ok": True, **data}
+            return data
+        return self._unsupported("list_sensors")
+
+    def sensor_snapshot(
+        self,
+        sensor_name: str,
+        resolution: str | None = None,
+    ) -> dict[str, Any]:
+        """Capture a single sensor frame via live bridge."""
+        url = bridge_url()
+        if url:
+            params = f"?sensor={sensor_name}"
+            if resolution:
+                params += f"&resolution={resolution}"
+            data = self._get_json(f"/sensor_snapshot{params}")
+            if data.get("ok"):
+                return {"ok": True, **data}
+            return data
+        return self._unsupported("sensor_snapshot")
+
+    def sensor_snapshot_all(
+        self,
+        sensor_types: str | None = None,
+    ) -> dict[str, Any]:
+        """Capture all sensor frames via live bridge."""
+        url = bridge_url()
+        if url:
+            params = ""
+            if sensor_types:
+                params = f"?types={sensor_types}"
+            data = self._get_json(f"/sensor_snapshot_all{params}")
+            if data.get("ok"):
+                return {"ok": True, **data}
+            return data
+        return self._unsupported("sensor_snapshot_all")
