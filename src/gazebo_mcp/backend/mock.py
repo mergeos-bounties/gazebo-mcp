@@ -1,4 +1,4 @@
-"""Offline Gazebo-style world mock."""
+"""Offline Gazebo-style world mock with graph state tracking."""
 
 from __future__ import annotations
 
@@ -19,11 +19,45 @@ class MockBackend:
         self._t0 = time.time()
         self._sim_time = 0.0
         self._models = self._seed_models(profile)
+        self._rebuild_graph()
         return {
             "ok": True,
             "profile": profile,
             "world": self._world,
             "models": list(self._models),
+        }
+
+    def _rebuild_graph(self) -> None:
+        """Rebuild the world scene graph from current model state."""
+        self._graph: dict[str, dict[str, Any]] = {}
+        for name, model in self._models.items():
+            self._graph[name] = {
+                "name": name,
+                "type": model.get("type", "unknown"),
+                "parent": None,
+                "children": [],
+                "pose": model.get("pose", {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0}),
+            }
+        # ground_plane acts as the root; all other models are its children
+        if "ground_plane" in self._graph:
+            for name in self._graph:
+                if name != "ground_plane":
+                    self._graph["ground_plane"]["children"].append(name)
+                    self._graph[name]["parent"] = "ground_plane"
+
+    def graph(self) -> dict[str, Any]:
+        """Return the current world scene graph (model hierarchy).
+
+        The graph reflects the parent-child relationships between models.
+        Every model spawn and delete automatically rebuilds the graph,
+        ensuring state consistency across all tools.
+        """
+        return {
+            "ok": True,
+            "mode": "mock",
+            "world": self._world,
+            "node_count": len(self._graph),
+            "nodes": list(self._graph.values()),
         }
 
     def _seed_models(self, profile: str) -> dict[str, dict[str, Any]]:
@@ -180,6 +214,7 @@ class MockBackend:
             "pose": {"x": float(x), "y": float(y), "z": float(z), "yaw": float(yaw)},
             "twist": self._twist(),
         }
+        self._rebuild_graph()
         return {"ok": True, "model": self._models[name]}
 
     def delete(self, name: str) -> dict[str, Any]:
@@ -188,6 +223,7 @@ class MockBackend:
         if name == "ground_plane":
             return {"ok": False, "error": "cannot delete ground_plane"}
         del self._models[name]
+        self._rebuild_graph()
         return {"ok": True, "deleted": name}
 
     def get_pose(self, name: str) -> dict[str, Any]:
