@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import random
 import time
 from typing import Any
 
 
 class MockBackend:
     name = "mock"
+    _SENSOR_TYPES = ("camera", "lidar", "imu", "depth_camera")
 
     def __init__(self) -> None:
         self.seed_demo()
@@ -19,11 +21,35 @@ class MockBackend:
         self._t0 = time.time()
         self._sim_time = 0.0
         self._models = self._seed_models(profile)
+        self._sensors = self._seed_sensors()
+        self._sensor_counter = len(self._sensors)
         return {
             "ok": True,
             "profile": profile,
             "world": self._world,
             "models": list(self._models),
+        }
+
+    def _seed_sensors(self) -> dict[str, dict[str, Any]]:
+        return {
+            "front_camera": {
+                "name": "front_camera",
+                "type": "camera",
+                "parent": "box_1",
+                "pose": {"x": 1.0, "y": 0.0, "z": 1.0, "yaw": 0.0},
+            },
+            "lidar_top": {
+                "name": "lidar_top",
+                "type": "lidar",
+                "parent": None,
+                "pose": {"x": 0.0, "y": 0.0, "z": 2.0, "yaw": 0.0},
+            },
+            "imu_body": {
+                "name": "imu_body",
+                "type": "imu",
+                "parent": "box_1",
+                "pose": {"x": 1.0, "y": 0.0, "z": 0.5, "yaw": 0.0},
+            },
         }
 
     def _seed_models(self, profile: str) -> dict[str, dict[str, Any]]:
@@ -92,6 +118,116 @@ class MockBackend:
                 "y": float(angular_velocity.get("y", 0.0)),
                 "z": float(angular_velocity.get("z", 0.0)),
             },
+        }
+
+    # ── sensor tools ──────────────────────────────────────────────────
+
+    def list_sensors(self) -> dict[str, Any]:
+        """Return all sensors attached to models or free in the world."""
+        return {
+            "ok": True,
+            "sensor_count": len(self._sensors),
+            "sensors": list(self._sensors.values()),
+        }
+
+    def sensor_snapshot(
+        self,
+        sensor_name: str,
+        resolution: str | None = None,
+    ) -> dict[str, Any]:
+        """Return synthetic sensor frame."""
+        sensor = self._sensors.get(sensor_name)
+        if not sensor:
+            return {"ok": False, "error": f"unknown sensor {sensor_name}"}
+        s_type = sensor["type"]
+        if s_type == "camera":
+            return self._camera_frame(sensor, resolution)
+        if s_type == "depth_camera":
+            return self._depth_frame(sensor, resolution)
+        if s_type == "lidar":
+            return self._lidar_scan(sensor)
+        if s_type == "imu":
+            return self._imu_data(sensor)
+        return {"ok": False, "error": f"unsupported sensor type {s_type}"}
+
+    def sensor_snapshot_all(
+        self,
+        sensor_types: str | None = None,
+    ) -> dict[str, Any]:
+        """Return snapshots for all sensors, optionally filtered by type."""
+        wanted: set[str] | None
+        if sensor_types:
+            wanted = set(sensor_types.replace(",", " ").split())
+            wanted = wanted & set(self._SENSOR_TYPES)
+        else:
+            wanted = set(self._SENSOR_TYPES)
+        frames: dict[str, Any] = {}
+        for name, s in self._sensors.items():
+            if s["type"] in wanted:
+                frames[name] = self.sensor_snapshot(name)
+        return {"ok": True, "sensor_count": len(frames), "frames": frames}
+
+    def _camera_frame(self, sensor: dict[str, Any], resolution: str | None) -> dict[str, Any]:
+        w, h = _parse_resolution(resolution, 640, 480)
+        rng = random.Random(hash(sensor["name"]))
+        return {
+            "ok": True,
+            "sensor": sensor["name"],
+            "type": "camera",
+            "timestamp_sec": round(self._sim_time if self._paused else time.time() - self._t0, 3),
+            "format": "rgb8",
+            "width": w,
+            "height": h,
+            "step": w * 3,
+            "data_length": w * h * 3,
+            "mock_data_hash": hex(rng.getrandbits(64)),
+            "pose": sensor.get("pose"),
+        }
+
+    def _depth_frame(self, sensor: dict[str, Any], resolution: str | None) -> dict[str, Any]:
+        w, h = _parse_resolution(resolution, 320, 240)
+        return {
+            "ok": True,
+            "sensor": sensor["name"],
+            "type": "depth_camera",
+            "format": "32FC1",
+            "width": w,
+            "height": h,
+            "step": w * 4,
+            "data_length": w * h * 4,
+            "unit": "meters",
+            "near_m": 0.1,
+            "far_m": 30.0,
+            "pose": sensor.get("pose"),
+        }
+
+    def _lidar_scan(self, sensor: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "ok": True,
+            "sensor": sensor["name"],
+            "type": "lidar",
+            "sim_time_sec": round(self._sim_time, 3),
+            "ranges": [],
+            "intensities": [],
+            "range_min_m": 0.1,
+            "range_max_m": 30.0,
+            "angle_min_rad": -3.14,
+            "angle_max_rad": 3.14,
+            "angle_increment_rad": 0.01745,
+            "point_count": 360,
+            "pose": sensor.get("pose"),
+        }
+
+    def _imu_data(self, sensor: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "ok": True,
+            "sensor": sensor["name"],
+            "type": "imu",
+            "sim_time_sec": self._sim_time,
+            "orientation": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0},
+            "angular_velocity": {"x": 0.0, "y": 0.0, "z": 0.0},
+            "linear_acceleration": {"x": 0.0, "y": 0.0, "z": 9.8},
+            "pose": sensor.get("pose"),
         }
 
     def doctor(self) -> dict[str, Any]:
@@ -227,3 +363,16 @@ class MockBackend:
         self._sim_time += 0.001 * n
         self._paused = True
         return {"ok": True, "steps": n, "sim_time_sec": round(self._sim_time, 3), "paused": True}
+
+
+def _parse_resolution(resolution: str | None, default_w: int, default_h: int) -> tuple[int, int]:
+    """Parse a resolution string like '640x480' into (w, h)."""
+    if not resolution:
+        return default_w, default_h
+    parts = resolution.lower().replace("\uff58", "x").split("x")
+    try:
+        if len(parts) >= 2:
+            return int(parts[0]), int(parts[1])
+    except ValueError:
+        pass
+    return default_w, default_h
