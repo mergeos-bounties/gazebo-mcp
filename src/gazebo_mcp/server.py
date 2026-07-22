@@ -14,7 +14,8 @@ mcp = FastMCP(
     "gazebo-mcp",
     instructions=(
         "Gazebo / gz-sim MCP server. Prefer mock mode offline. "
-        "Typical flow: gazebo_doctor → gazebo_world_info → gazebo_list_models → gazebo_spawn."
+        "Typical flow: gazebo_doctor → gazebo_world_info → gazebo_list_models → gazebo_spawn. "
+        "Use gazebo_graph to inspect the scene hierarchy after spawn/delete operations."
     ),
 )
 
@@ -69,6 +70,16 @@ def world_snapshot() -> str:
 
 
 @mcp.tool()
+def gazebo_graph() -> str:
+    """Return the current world scene graph (model hierarchy).
+
+    The graph reflects parent-child relationships between models.
+    Automatically updated on every spawn/delete — state is always consistent.
+    """
+    return _j(get_backend().graph())
+
+
+@mcp.tool()
 def gazebo_spawn(
     name: str,
     model_type: str = "box",
@@ -77,13 +88,13 @@ def gazebo_spawn(
     z: float = 0.5,
     yaw: float = 0.0,
 ) -> str:
-    """Spawn a model at pose."""
+    """Spawn a model at pose. Automatically updates the scene graph."""
     return _j(get_backend().spawn(name, model_type, x, y, z, yaw))
 
 
 @mcp.tool()
 def gazebo_delete(name: str) -> str:
-    """Delete a model by name."""
+    """Delete a model by name. Automatically updates the scene graph."""
     return _j(get_backend().delete(name))
 
 
@@ -137,6 +148,15 @@ def gazebo_unpause() -> str:
 def gazebo_step(steps: int = 1) -> str:
     """Step the physics engine N times (leaves sim paused)."""
     return _j(get_backend().step(steps))
+
+
+@mcp.tool()
+def gazebo_sensor_snapshot(
+    sensor_type: str = "lidar",
+    name: str | None = None,
+) -> str:
+    """Return synthetic sensor frame data (lidar, camera, depth, imu)."""
+    return _j(get_backend().sensor_snapshot(sensor_type, name))
 
 
 def run_stdio() -> None:

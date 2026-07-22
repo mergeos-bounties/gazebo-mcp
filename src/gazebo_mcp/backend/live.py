@@ -149,3 +149,11 @@ class LiveBackend:
 
     def step(self, steps: int = 1) -> dict[str, Any]:
         return self._unsupported("step")
+
+    def sensor_snapshot(self, sensor_type: str = "lidar", name: str | None = None) -> dict[str, Any]:
+        """Return synthetic sensor frame data (live stub — falls back to mock data)."""
+        # Live stub: returns mock data when bridge is unavailable
+        d = self.doctor()
+        if not d.get("ok"):
+            return d
+        return self._unsupported("sensor_snapshot")
