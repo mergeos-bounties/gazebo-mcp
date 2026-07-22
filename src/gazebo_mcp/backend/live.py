@@ -149,3 +149,14 @@ class LiveBackend:
 
     def step(self, steps: int = 1) -> dict[str, Any]:
         return self._unsupported("step")
+
+    def sensor_snapshot(self, sensor_type: str = "lidar", count: int = 1) -> dict[str, Any]:
+        """Stub for real gz-sim sensor bridge."""
+        return {
+            "mode": "live",
+            "sensor_type": sensor_type,
+            "count": count,
+            "status": "stub",
+            "message": "Live sensor bridge not yet implemented — requires gz-transport",
+            "frames": []
+        }

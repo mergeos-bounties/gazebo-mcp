@@ -227,3 +227,97 @@ class MockBackend:
         self._sim_time += 0.001 * n
         self._paused = True
         return {"ok": True, "steps": n, "sim_time_sec": round(self._sim_time, 3), "paused": True}
+
+    def sensor_snapshot(self, sensor_type: str = "lidar", count: int = 1) -> dict[str, Any]:
+        """Return synthetic sensor frames for agent workflows.
+        
+        Supports: lidar, camera, depth, thermal
+        
+        Returns deterministic mock frames with schema documentation.
+        See docs/sensor-snapshot.md for full schema.
+        """
+        import random
+        random.seed(hash(sensor_type) + count)
+        
+        frame_schema = {
+            "sensor_type": sensor_type,
+            "count": count,
+            "frames": []
+        }
+        
+        for i in range(count):
+            if sensor_type == "lidar":
+                frame = {
+                    "frame_id": f"lidar_{i}",
+                    "timestamp": round(self._sim_time + i * 0.01, 6),
+                    "type": "lidar_scan",
+                    "ranges": [round(random.uniform(0.5, 10.0), 3) for _ in range(360)],
+                    "angle_min": -3.14159,
+                    "angle_max": 3.14159,
+                    "angle_increment": 0.01745,
+                    "width": 360,
+                    "height": 1,
+                    "frame_status": "ok"
+                }
+            elif sensor_type == "camera":
+                frame = {
+                    "frame_id": f"camera_{i}",
+                    "timestamp": round(self._sim_time + i * 0.033, 6),
+                    "type": "image_frame",
+                    "width": 640,
+                    "height": 480,
+                    "encoding": "rgb8",
+                    "step": 640 * 3,
+                    "data_size": 640 * 480 * 3,
+                    "camera_info": {
+                        "K": [525.0, 0, 320, 0, 525.0, 240, 0, 0, 1],
+                        "D": [0, 0, 0, 0, 0],
+                        "R": [1, 0, 0, 0, 1, 0, 0, 0, 1],
+                        "P": [525.0, 0, 320, 0, 0, 525.0, 240, 0, 0, 0, 1, 0]
+                    },
+                    "pose": {
+                        "position": {"x": round(random.uniform(-5, 5), 3), 
+                                     "y": round(random.uniform(-5, 5), 3), 
+                                     "z": round(random.uniform(0.5, 3), 3)},
+                        "orientation": {"x": 0, "y": 0, "z": 0, "w": 1}
+                    },
+                    "frame_status": "ok"
+                }
+            elif sensor_type == "depth":
+                frame = {
+                    "frame_id": f"depth_{i}",
+                    "timestamp": round(self._sim_time + i * 0.033, 6),
+                    "type": "depth_frame",
+                    "width": 640,
+                    "height": 480,
+                    "encoding": "32FC1",
+                    "step": 640 * 4,
+                    "data_size": 640 * 480 * 4,
+                    "min_range": 0.1,
+                    "max_range": 30.0,
+                    "frame_status": "ok"
+                }
+            elif sensor_type == "thermal":
+                frame = {
+                    "frame_id": f"thermal_{i}",
+                    "timestamp": round(self._sim_time + i * 0.033, 6),
+                    "type": "thermal_frame",
+                    "width": 320,
+                    "height": 240,
+                    "encoding": "mono16",
+                    "min_temp": -20.0,
+                    "max_temp": 100.0,
+                    "emissivity": 0.95,
+                    "frame_status": "ok"
+                }
+            else:
+                frame = {
+                    "frame_id": f"{sensor_type}_{i}",
+                    "timestamp": round(self._sim_time + i * 0.01, 6),
+                    "type": sensor_type,
+                    "data": {},
+                    "frame_status": "ok"
+                }
+            frame_schema["frames"].append(frame)
+        
+        return frame_schema
